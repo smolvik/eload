@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# setting for serial port
+SDEV=/dev/ttyS3
+BODERATE=115200
+# setting for tcp/ip connection
+IP=127.0.0.1
+PORT=1502
+# timeout modbus ms
+TIMEOUT=500
+
+# launch as demon
+#./mbrtutcp_bridge -d$SDEV -b$BODERATE -i$IP -p$PORT
+
+# launch in foreground mode
+./mbrtutcp_bridge -d$SDEV -b$BODERATE -i$IP -p$PORT -f

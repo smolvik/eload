@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if test -n "$QUERY_STRING" ; then
+#warr=$(echo "$QUERY_STRING" | sed -n 's/^\([x0-9a-f]\+\),\([x0-9a-f]\+\),\([x0-9a-f]\+\),\([x0-9a-f]\+\)$/\1 \2 \3 \4/p')
+id=$(echo "$QUERY_STRING" | cut -d',' -f1)
+mode=$(echo "$QUERY_STRING" | cut -d',' -f2)
+cur=$(echo "$QUERY_STRING" | cut -d',' -f3)
+res=$(echo "$QUERY_STRING" | cut -d',' -f4)
+fi
+
+echo "$id" 1>&2
+echo "$mode" 1>&2
+echo "$cur" 1>&2
+echo "$res" 1>&2
+
+#serverip='192.168.1.1'
+serverip='127.0.0.1'
+timeout=1000
+
+arr=$(./mbtcp_client -i$serverip -m$id -t$timeout -s0 $cur $res $mode)
+echo "$arr" 1>&2
+
+echo "Content-type: text/html; charset=utf-8"
+echo ""
+echo "$arr"
+
+exit 0;

@@ -1,0 +1,28 @@
+#!/bin/sh
+
+echo "Content-type: text/html; charset=utf-8"
+echo ""
+echo "<HTML>"
+echo ""
+echo "<BODY text="#000000" bgcolor="#ffffff">"
+echo ""
+echo "<FORM METHOD="get" ACTION="/cgi-bin/restart">"
+echo "Хотите перезагрузить систему?"
+echo "<INPUT type="submit" name='YES'  value='Да'>"
+echo "</FORM>"
+echo ""
+#env | sed -n 's/$/<br>/p'
+
+if echo "$QUERY_STRING"|grep -q 'YES'; then
+logger -t 'spynet' -p info 'user requesting system restart'
+echo "<font color=#0000ff>Получен запрос перезагрузки системы.</font>"
+reboot
+fi
+
+echo "</BODY>"
+echo "</HTML>"
+
+
+
+
+

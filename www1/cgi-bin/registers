@@ -1,0 +1,62 @@
+#!/bin/sh
+
+if test -n "$QUERY_STRING" ; then
+warr=$(echo "$QUERY_STRING" | sed -n 's/^reg7=\([x0-9a-f]\+\)&reg8=\([x0-9a-f]\+\)&reg9=\([x0-9a-f]\+\)&[[:print:]]\+$/\1 \2 \3/p')
+fi
+
+#serverip='192.168.1.1'
+serverip='127.0.0.1'
+timeout=1000
+
+arr=$(./mbtcp_client -i$serverip -m1 -t$timeout $warr)
+
+if test -n "$arr" ; then
+set $arr
+reg0=$1
+reg1=$2
+reg2=$3
+reg3=$4
+reg4=$5
+reg5=$6
+reg6=$7
+reg7=$8
+reg8=$9
+reg9=$10
+fi
+
+echo "Content-type: text/html; charset=utf-8"
+echo ""
+echo "<HTML>"
+echo "<BODY text="#000000" bgcolor="#ffffff">"
+echo "<H2>"
+echo "Регистры"
+echo "</H2>"
+echo ""
+echo "<FORM METHOD="get" ACTION="/cgi-bin/registers">"
+echo ""
+echo ""
+echo "<table>"
+echo "<tr>"
+for i in `seq 0 9`
+do
+echo "<td bgcolor="#0ff000">R$i</td>"
+done
+echo "</tr>"
+echo "<tr>"
+for x in $reg0 $reg1 $reg2 $reg3 $reg4 $reg5 $reg6
+do
+echo "<td bgcolor="#0ff000">$x</td>"
+done
+echo "<td bgcolor="#0ff000"><input type="text" size="6" maxlength="6" name="reg7" value="$reg7"></td>"
+echo "<td bgcolor="#0ff000"><input type="text" size="6" maxlength="6" name="reg8" value="$reg8"></td>"
+echo "<td bgcolor="#0ff000"><input type="text" size="6" maxlength="6" name="reg9" value="$reg9"></td>"
+echo "</tr>"
+echo "</table>"
+echo "<BR>"
+echo "<INPUT type="submit" name="sync" value='СИНХРОНИЗИРОВАТЬ'>"
+echo ""
+echo "<BR>"
+echo "</FORM>"
+echo ""
+echo "</BODY>"
+echo "</HTML>"

@@ -1,0 +1,342 @@
+<html>
+<meta HTTP-EQUIV="content-type" CONTENT="text/html; charset=utf-8">
+<link href="style.css" rel="stylesheet">
+<head>
+	
+<script>
+	
+var xmlHttp = getXmlHttp();
+
+//setTimeout(updateTemp, 500, 0);
+		
+function getXmlHttp()
+{
+	var xmlhttp;
+
+	if (window.XMLHttpRequest) 
+	{
+		//Firefox, Opera, IE7, and other browsers will use the native object
+		xmlhttp = new XMLHttpRequest();
+	} else 
+	{
+		//IE 5 and 6 will use the ActiveX control
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	return xmlhttp;
+}		
+/*
+function update(){
+	var xmlHttp = null;
+	
+	var tempOut = 0;
+	var redledOut = 0;
+	var greenledOut = 0;
+	
+	if(document.getElementById('red_led').checked){
+		redledOut = 1;
+	}
+	
+								
+	if(document.getElementById('green_led').checked){
+		greenledOut = 1;
+	}		
+	
+	tempOut = parseInt(document.getElementById('tempOut').value);
+	
+	var httpRreq = "/cgi-bin/rread?"+tempOut.toString(16)+","+redledOut.toString(16)+","+greenledOut.toString(16);
+	//document.getElementById('debug').innerHTML = httpRreq;
+	
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.open( "GET", httpRreq, false );
+	xmlHttp.send( null );
+	if(xmlHttp.status == 200){
+		//document.getElementById('debug').innerHTML = xmlHttp.responseText;of input
+		var data = xmlHttp.responseText.split(' ');
+		if(data.length == 8){
+			updateTemp(parseInt(data[0], 16));html кнопка
+			updateStatusLamp(parseInt(data[1], 16));
+			setTimeout(update, 1000);
+		}
+		else{
+			document.write("Error:modbus server not avaiable");
+		}
+	}
+	else{
+		document.write("Error:http server");
+	}	
+}
+*/
+
+function update(n)
+{
+	var mode = 0;
+	var cur = 0;
+	var res = 0;
+	var id = 0;
+	var mvolt = 0;
+	var mcur = 0;
+	var mtemp = 0;
+	var canv = 0;
+	var txt = 0;
+	
+	if(n>3) n = 1;
+	switch(n)
+	{
+		case 1:
+		mode = parseInt(document.getElementById('mode1').value);
+		cur = parseInt(document.getElementById('cur1').value);
+		res = parseInt(document.getElementById('res1').value);
+		id = 1;
+		mvolt=document.getElementById('mvolt1');
+		mcur=document.getElementById('mcur1');
+		//mtemp=document.getElementById('mtemp1');
+		canv = document.getElementById('TempChart1');
+		txt = document.getElementById('valTemp1');
+		break
+		
+		case 2:
+		mode = parseInt(document.getElementById('mode2').value);
+		cur = parseInt(document.getElementById('cur2').value);
+		res = parseInt(document.getElementById('res2').value);	
+		id = 1;
+		mvolt=document.getElementById('mvolt2');
+		mcur=document.getElementById('mcur2');
+		//mtemp=document.getElementById('mtemp2');	
+		canv = document.getElementById('TempChart2');	
+		txt = document.getElementById('valTemp2');
+		break;
+		
+		case 3:
+		mode = parseInt(document.getElementById('mode3').value);
+		cur = parseInt(document.getElementById('cur3').value);
+		res = parseInt(document.getElementById('res3').value);
+		id = 1;
+		mvolt=document.getElementById('mvolt3');
+		mcur=document.getElementById('mcur3');
+		//mtemp=document.getElementById('mtemp3');
+		canv = document.getElementById('TempChart3');
+		txt = document.getElementById('valTemp3');
+		break;
+	}
+	
+	var httpRreq = "/cgi-bin/rread?"+id+","+mode.toString(16)+","+cur.toString(16)+","+res.toString(16);
+	document.getElementById('debug').innerHTML = httpRreq;
+
+	xmlHttp.open( "GET", httpRreq, true );
+	xmlHttp.onreadystatechange = function() {
+		if(xmlHttp.readyState == 4){
+			if(xmlHttp.status == 200)
+			{
+				var data = xmlHttp.responseText.split(' ');
+				if(data.length == 8){
+					document.getElementById('debug').innerHTML = data;
+					mvolt.innerHTML = parseInt(data[5], 16)
+					mcur.innerHTML = parseInt(data[6], 16)
+					//mtemp.innerHTML = parseInt(data[7], 16)
+					
+					updateTemp(canv, txt, parseInt(data[7], 16));
+					
+				}
+				else{
+					//document.write("Error:modbus server not avaiable");
+					document.getElementById('debug').innerHTML = "Error:modbus server not avaiable";
+				}	
+				setTimeout(update, 300, n+1);			
+
+			}
+		}
+	};
+		
+	xmlHttp.send( null );
+	//setTimeout(update, 300, n+1);
+}
+
+function updateStatusLamp(flag){
+	var canvas = document.getElementById("StatusLamp");
+	var ctx = canvas.getContext("2d");			
+	var width = canvas.width;
+	var height = canvas.height;
+	if(typeof(this.sw)=="undefined")  sw = 0;
+
+	if(flag == 0){
+		ctx.fillStyle = "green";
+		ctx.fillRect(0,0,width,height);
+		ctx.font = "20px Arial";
+		ctx.fillStyle = "white";
+		ctx.fillText("НОРМА",50,45);
+	}
+	else
+	{	
+		if(sw == 0){	
+			ctx.fillStyle = "white";
+			ctx.fillRect(0,0,width,height);
+			ctx.fillStyle = "red";
+			sw = 1;
+		}
+		else{
+			ctx.fillStyle = "red";
+			ctx.fillRect(0,0,width,height);
+			ctx.fillStyle = "white";
+			sw = 0;
+		}		
+
+		ctx.font = "20px Arial";		
+		ctx.fillText("НЕИСПРАВНОСТЬ",17,45);	
+		
+		ctx.strokeStyle = "red";
+		ctx.lineWidth = 5;
+		ctx.strokeRect(0, 0, width, height);
+	}
+		
+}
+
+function updateTemp(canvas, text, nt)
+{
+	
+	//nt=document.getElementById("mtemp1").innerHTML;
+	
+	//var canvas = document.getElementById("TempChart");
+	var ctx = canvas.getContext("2d");
+	if(typeof(canvas.temp)=="undefined"){
+		canvas.temp = new Array(41).join('0').split(''); 
+	}
+	
+	var temp = canvas.temp;
+	var x;
+	var y;
+	var width = canvas.width;
+	var height = canvas.height;
+	var dx = width/(temp.length-1);
+	//nt = Math.floor((Math.random() * 100));
+		
+	//document.getElementById('valTemp').innerHTML = "T="+nt+"&#8451";
+	text.innerHTML = "T="+nt+"&#8451";
+		
+	temp.shift();
+	temp.push(nt);
+
+	ctx.fillStyle = "#dbdbdb";
+	ctx.fillRect(0,0,width,height);
+
+	y = height-2*temp[0];
+	ctx.beginPath();
+	ctx.moveTo(0, height);
+	ctx.lineTo(0, y);
+	for (var i = 1; i < temp.length; i ++)
+	{	
+		x = i*dx;
+		y = height-2*temp[i];
+		ctx.lineTo(x, y);
+	}
+	ctx.lineTo(x, height);
+	ctx.lineTo(0, height);
+
+	ctx.strokeStyle = "red";
+	ctx.lineWidth = "2"
+	ctx.stroke();
+	ctx.fillStyle = "#ffb3b3";
+	ctx.fill();
+	
+	// greed
+	dx = width/4;
+	dy = height/2;
+	ctx.strokeStyle = "white";
+	ctx.lineWidth = "1"	
+	ctx.beginPath();
+	for( i = 0; i < 4; i++){
+		ctx.moveTo(i*dx, 0);
+		ctx.lineTo(i*dx, height);
+	}
+	for( i = 0; i < 2; i++){
+		ctx.moveTo(0, i*dy);
+		ctx.lineTo(width, i*dy);
+	}	
+	ctx.stroke();
+
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = 5;
+	ctx.strokeRect(0, 0, width, height);
+	
+	//setTimeout(updateTemp, 500, 0);
+}
+
+
+</script>
+</head>
+
+<body onload="update(1)">
+<div id="header"><h1>eLoad_control_panel</h1></div>
+
+<div id = "content">
+
+<table width="100%" border="1" cellpadding="4" cellspacing="0">
+	<tr><th colspan='4'> Задатчик </th></tr>
+	<tr><th></th><th>Модуль 1</th><th>Модуль 2</th><th>Модуль 3</th></tr>
+	<tr>
+		<td>РЕЖИМ</td>
+		<td>
+			<select id="mode1">
+			<option Value="0">ВЫКЛ</option>
+			<option Value="1">ТОК</option>
+			<option Value="2">СОПР.</option>
+			</select>			
+		</td>
+		<td>
+			<select id="mode2">
+			<option Value="0">ВЫКЛ</option>
+			<option Value="1">ТОК</option>
+			<option Value="2">СОПР.</option>
+			</select>						
+		</td>
+		<td>
+			<select id="mode3">
+			<option Value="0">ВЫКЛ</option>
+			<option Value="1">ТОК</option>
+			<option Value="2">СОПР.</option>
+			</select>					
+		</td>
+	</tr>
+	<tr>
+		<td>ТОК mA</td>
+		<td><p><input id="cur1" maxlength="5" size="10" value="1000"></p></td>
+		<td><p><input id="cur2" maxlength="5" size="10" value="1000"></p></td>
+		<td><p><input id="cur3" maxlength="5" size="10" value="1000"></p></td>
+	</tr>
+	<tr>
+		<td>СОПР. Ом</td>
+		<td><p><input id="res1" maxlength="3" size="10" value="100"></p></td>
+		<td><p><input id="res2" maxlength="3" size="10" value="100"></p></td>
+		<td><p><input id="res3" maxlength="3" size="10" value="100"></p></td>
+	</tr>
+	
+	<tr><th colspan='4'> Измеритель </th></tr>
+	<tr>
+		<td>НАПРЯЖЕНИЕ В</td>
+		<td id="mvolt1">0</td>
+		<td id="mvolt2">0</td>
+		<td id="mvolt3">0</td>
+	</tr>
+	<tr>
+		<td>ТОК mA</td>
+		<td id="mcur1">0</td>
+		<td id="mcur2">0</td>
+		<td id="mcur3">0</td>
+	</tr>
+	
+	<tr>
+		<td>ТЕМПЕРАТУРА &#8451</td>
+		<td><H3 id = "valTemp1"></H3><canvas id="TempChart1" width="200" height="150"></canvas></td>
+		<td><H3 id = "valTemp2"></H3><canvas id="TempChart2" width="200" height="150"></canvas></td>
+		<td><H3 id = "valTemp3"></H3><canvas id="TempChart3" width="200" height="150"></canvas></td>
+	</tr>
+	
+</table>
+</div>
+
+<div id='footer'>
+<p id = 'debug'></p>
+</div>
+
+</body>
+</html> 
+

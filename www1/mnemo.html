@@ -1,0 +1,294 @@
+<html>
+<meta HTTP-EQUIV="content-type" CONTENT="text/html; charset=utf-8">
+<head>
+	
+<style>
+
+input[type=checkbox] {
+	visibility: hidden;
+}
+
+.checkboxRed {
+width: 120px;
+	height: 40px;
+	background: #777;
+	margin: 20px 20px;
+	border-radius: 50px;
+	position: relative;
+}
+
+.checkboxRed:before {
+	content: 'On';
+	position: absolute;
+	top: 12px;
+	left: 13px;
+	height: 2px;
+	color: #f00;
+	font-size: 16px;
+}
+
+.checkboxRed:after {
+	content: 'Off';
+	position: absolute;
+	top: 12px;
+	left: 84px;
+	height: 2px;
+	color: #111;
+	font-size: 16px;
+}
+
+.checkboxRed label {
+	display: block;
+	width: 52px;
+	height: 22px;
+	border-radius: 50px;
+
+	cursor: pointer;
+	position: absolute;
+	top: 9px;
+	z-index: 1;
+	left: 12px;
+	background: #ddd;
+}
+
+.checkboxRed input[type=checkbox]:checked + label {
+	left: 60px;
+	background: #f00;
+}
+
+.checkboxGreen {
+width: 120px;
+	height: 40px;
+	background: #777;
+	margin: 20px 20px;
+	border-radius: 50px;
+	position: relative;
+}
+
+.checkboxGreen:before {
+	content: 'On';
+	position: absolute;
+	top: 12px;
+	left: 13px;
+	height: 2px;
+	color: #0f0;
+	font-size: 16px;
+}
+
+.checkboxGreen:after {
+	content: 'Off';
+	position: absolute;
+	top: 12px;
+	left: 84px;
+	height: 2px;
+	color: #111;
+	font-size: 16px;
+}
+
+.checkboxGreen label {
+	display: block;
+	width: 52px;
+	height: 22px;
+	border-radius: 50px;
+
+	cursor: pointer;
+	position: absolute;
+	top: 9px;
+	z-index: 1;
+	left: 12px;
+	background: #ddd;
+}
+
+.checkboxGreen input[type=checkbox]:checked + label {
+	left: 60px;
+	background: #0f0;
+}
+
+}
+
+</style>	
+
+	
+<script>
+
+function update(){
+	var xmlHttp = null;
+	
+	var tempOut = 0;
+	var redledOut = 0;
+	var greenledOut = 0;
+	
+	if(document.getElementById('red_led').checked){
+		redledOut = 1;
+	}
+	
+								
+	if(document.getElementById('green_led').checked){
+		greenledOut = 1;
+	}		
+	
+	tempOut = parseInt(document.getElementById('tempOut').value);
+	
+	var httpRreq = "/cgi-bin/rread?"+tempOut.toString(16)+","+redledOut.toString(16)+","+greenledOut.toString(16);
+	//document.getElementById('debug').innerHTML = httpRreq;
+	
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.open( "GET", httpRreq, false );
+	xmlHttp.send( null );
+	if(xmlHttp.status == 200){
+		//document.getElementById('debug').innerHTML = xmlHttp.responseText;of input
+		var data = xmlHttp.responseText.split(' ');
+		if(data.length == 8){
+			updateTemp(parseInt(data[0], 16));
+			updateStatusLamp(parseInt(data[1], 16));
+			setTimeout(update, 1000);
+		}
+		else{
+			document.write("Error:modbus server not avaiable");
+		}
+	}
+	else{
+		document.write("Error:http server");
+	}	
+}
+
+
+function updateStatusLamp(flag){
+	var canvas = document.getElementById("StatusLamp");
+	var ctx = canvas.getContext("2d");			
+	var width = canvas.width;
+	var height = canvas.height;
+	if(typeof(this.sw)=="undefined")  sw = 0;
+
+	if(flag == 0){
+		ctx.fillStyle = "green";
+		ctx.fillRect(0,0,width,height);
+		ctx.font = "20px Arial";
+		ctx.fillStyle = "white";
+		ctx.fillText("НОРМА",50,45);
+	}
+	else
+	{	
+		if(sw == 0){	
+			ctx.fillStyle = "white";
+			ctx.fillRect(0,0,width,height);
+			ctx.fillStyle = "red";
+			sw = 1;
+		}
+		else{
+			ctx.fillStyle = "red";
+			ctx.fillRect(0,0,width,height);
+			ctx.fillStyle = "white";
+			sw = 0;
+		}		
+
+		ctx.font = "20px Arial";		
+		ctx.fillText("НЕИСПРАВНОСТЬ",17,45);	
+		
+		ctx.strokeStyle = "red";
+		ctx.lineWidth = 5;
+		ctx.strokeRect(0, 0, width, height);
+	}
+		
+}
+
+function updateTemp(nt){
+	var canvas = document.getElementById("TempChart");
+	var ctx = canvas.getContext("2d");
+	if(typeof(this.temp)=="undefined"){
+		this.temp = new Array(41).join('0').split(''); 
+	}
+	var x;
+	var y;
+	var width = canvas.width;
+	var height = canvas.height;
+	var dx = width/(temp.length-1);
+	//nt = Math.floor((Math.random() * 100));
+		
+	document.getElementById('valTemp').innerHTML = "T="+nt+"&#8451";
+		
+	temp.shift();
+	temp.push(nt);
+
+	ctx.fillStyle = "#dbdbdb";
+	ctx.fillRect(0,0,width,height);
+
+	y = height-2*temp[0];
+	ctx.beginPath();
+	ctx.moveTo(0, height);
+	ctx.lineTo(0, y);
+	for (var i = 1; i < temp.length; i ++)
+	{	
+		x = i*dx;
+		y = height-2*temp[i];
+		ctx.lineTo(x, y);
+	}
+	ctx.lineTo(x, height);
+	ctx.lineTo(0, height);
+
+	ctx.strokeStyle = "red";
+	ctx.lineWidth = "2"
+	ctx.stroke();
+	ctx.fillStyle = "#ffb3b3";
+	ctx.fill();
+	
+	// greed
+	dx = width/4;
+	dy = height/2;
+	ctx.strokeStyle = "white";
+	ctx.lineWidth = "1"	
+	ctx.beginPath();
+	for( i = 0; i < 4; i++){
+		ctx.moveTo(i*dx, 0);
+		ctx.lineTo(i*dx, height);
+	}
+	for( i = 0; i < 2; i++){
+		ctx.moveTo(0, i*dy);
+		ctx.lineTo(width, i*dy);
+	}	
+	ctx.stroke();
+
+	ctx.strokeStyle = "black";
+	ctx.lineWidth = 5;
+	ctx.strokeRect(0, 0, width, height);
+	
+	//setTimeout(updateTemp, 1000);
+}
+</script>
+</head>
+
+<body onload="update()">
+
+
+<table >
+	<tr>
+		<td colspan='2' align='center'><H3 id = "valTemp"></H3><canvas id="TempChart" width="400" height="200"></canvas></td><td></td>
+	</tr>
+	<tr><td colspan='2' align='center'><h3>Светодиоды</h3><td></td></tr>
+	<tr>
+		<td><p class="checkboxRed"><input type="checkbox" id="red_led"/><label for="red_led"></label></p></td>
+		<td><p class="checkboxGreen"><input type="checkbox" id="green_led"/><label for="green_led"></label></p></td>
+	</tr>	
+	<tr><td align='center'><h3>Статус</h3><td><h3>Температура</h3></td></tr>
+	<tr>
+		<td><canvas id="StatusLamp" width="200" height="70"></canvas></td>	
+		<td>
+			<select id="tempOut">
+			<option Value="5">5&#8451</option>
+			<option Value="10">10&#8451</option>
+			<option Value="15">15&#8451</option>
+			<option Value="20">20&#8451</option>
+			<option Value="25">25&#8451</option>
+			<option Value="30">30&#8451</option>
+			<option Value="35">35&#8451</option>
+			<option Value="40">40&#8451</option>
+			</select>			
+		</td>
+	</tr>
+</table>
+
+<p id = 'debug'></p>
+
+</body>
+</html> 
+

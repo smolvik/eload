@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if test -n "$QUERY_STRING" ; then
+warr=$(echo "$QUERY_STRING" | sed -n 's/^\([x0-9a-f]\+\),\([x0-9a-f]\+\),\([x0-9a-f]\+\)$/\1 \2 \3/p')
+fi
+
+#serverip='192.168.1.1'
+serverip='127.0.0.1'
+timeout=1000
+
+arr=$(./mbtcp_client -i$serverip -m17 -t$timeout $warr)
+
+echo "Content-type: text/html; charset=utf-8"
+echo ""
+echo "$arr"
+
+exit 0;
